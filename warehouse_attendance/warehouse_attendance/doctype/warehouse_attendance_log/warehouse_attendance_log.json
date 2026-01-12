@@ -1,0 +1,76 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-01-11 18:30:29.463080",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "staff",
+  "timestamp",
+  "logtype",
+  "deviceid",
+  "location",
+  "selfie"
+ ],
+ "fields": [
+  {
+   "fieldname": "staff",
+   "fieldtype": "Link",
+   "label": "Staff",
+   "options": "Warehouse Staff"
+  },
+  {
+   "fieldname": "logtype",
+   "fieldtype": "Select",
+   "label": "Log Type",
+   "options": "IN\nOUT"
+  },
+  {
+   "fieldname": "deviceid",
+   "fieldtype": "Data",
+   "label": "Deviceid"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Geolocation",
+   "label": "Location"
+  },
+  {
+   "fieldname": "timestamp",
+   "fieldtype": "Datetime",
+   "label": "Time"
+  },
+  {
+   "fieldname": "selfie",
+   "fieldtype": "Attach Image",
+   "label": "Selfie"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-12 11:45:32.361109",
+ "modified_by": "Administrator",
+ "module": "Warehouse Attendance",
+ "name": "Warehouse Attendance Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

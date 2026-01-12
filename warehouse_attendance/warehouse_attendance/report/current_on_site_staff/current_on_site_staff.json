@@ -1,0 +1,29 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2026-01-12 12:35:44.238884",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "json": "{}",
+ "letter_head": null,
+ "modified": "2026-01-12 12:35:44.238884",
+ "modified_by": "Administrator",
+ "module": "Warehouse Attendance",
+ "name": "Current On-Site Staff",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Warehouse Attendance Log",
+ "report_name": "Current On-Site Staff",
+ "report_type": "Report Builder",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "timeout": 0
+}
