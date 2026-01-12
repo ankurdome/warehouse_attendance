@@ -9,7 +9,8 @@
   "staffname",
   "staffid",
   "warehouselocation",
-  "current_status"
+  "current_status",
+  "reference_photo"
  ],
  "fields": [
   {
@@ -37,12 +38,18 @@
    "fieldtype": "Select",
    "label": "Current Status",
    "options": "Active\nInactive"
+  },
+  {
+   "fieldname": "reference_photo",
+   "fieldtype": "Attach Image",
+   "label": "reference_photo",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-11 19:24:53.080554",
+ "modified": "2026-01-12 15:22:59.793984",
  "modified_by": "Administrator",
  "module": "Warehouse Attendance",
  "name": "Warehouse Staff",

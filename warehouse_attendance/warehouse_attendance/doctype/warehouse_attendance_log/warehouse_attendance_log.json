@@ -10,7 +10,9 @@
   "logtype",
   "deviceid",
   "location",
-  "selfie"
+  "selfie",
+  "verification_status",
+  "face_distance"
  ],
  "fields": [
   {
@@ -44,12 +46,25 @@
    "fieldname": "selfie",
    "fieldtype": "Attach Image",
    "label": "Selfie"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "verification_status",
+   "fieldtype": "Select",
+   "label": "verification_status",
+   "options": "Pending\nSuccess\nFailed"
+  },
+  {
+   "description": "Lower is more accurate (typically < 0.6 is a match).",
+   "fieldname": "face_distance",
+   "fieldtype": "Float",
+   "label": "face_distance"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-12 11:45:32.361109",
+ "modified": "2026-01-12 15:46:03.642409",
  "modified_by": "Administrator",
  "module": "Warehouse Attendance",
  "name": "Warehouse Attendance Log",
