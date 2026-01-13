@@ -6,24 +6,30 @@
  "engine": "InnoDB",
  "field_order": [
   "staff",
+  "employee_name",
   "timestamp",
   "logtype",
   "deviceid",
   "location",
   "selfie",
   "verification_status",
-  "face_distance"
+  "face_distance",
+  "is_near_warehouse",
+  "work_hours"
  ],
  "fields": [
   {
    "fieldname": "staff",
    "fieldtype": "Link",
-   "label": "Staff",
-   "options": "Warehouse Staff"
+   "in_list_view": 1,
+   "label": "Staff ID",
+   "options": "Warehouse Staff",
+   "read_only": 1
   },
   {
    "fieldname": "logtype",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "Log Type",
    "options": "IN\nOUT"
   },
@@ -51,6 +57,7 @@
    "default": "Pending",
    "fieldname": "verification_status",
    "fieldtype": "Select",
+   "in_list_view": 1,
    "label": "verification_status",
    "options": "Pending\nSuccess\nFailed"
   },
@@ -59,12 +66,32 @@
    "fieldname": "face_distance",
    "fieldtype": "Float",
    "label": "face_distance"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_near_warehouse",
+   "fieldtype": "Check",
+   "label": "is_near_warehouse"
+  },
+  {
+   "fieldname": "work_hours",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "work_hours"
+  },
+  {
+   "fetch_from": "staff.staffname",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-12 15:46:03.642409",
+ "modified": "2026-01-13 12:33:13.726822",
  "modified_by": "Administrator",
  "module": "Warehouse Attendance",
  "name": "Warehouse Attendance Log",
@@ -85,7 +112,9 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
+ "search_fields": "staff,employee_name, logtype, verification_status, work_hours",
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": []
+ "states": [],
+ "title_field": "employee_name"
 }

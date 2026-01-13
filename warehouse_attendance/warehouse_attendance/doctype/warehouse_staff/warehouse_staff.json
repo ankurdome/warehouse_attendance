@@ -8,7 +8,7 @@
  "field_order": [
   "staffname",
   "staffid",
-  "warehouselocation",
+  "warehouse_location",
   "current_status",
   "reference_photo"
  ],
@@ -28,12 +28,6 @@
    "search_index": 1
   },
   {
-   "fieldname": "warehouselocation",
-   "fieldtype": "Link",
-   "label": "Warehouse Location",
-   "options": "Warehouse"
-  },
-  {
    "fieldname": "current_status",
    "fieldtype": "Select",
    "label": "Current Status",
@@ -44,12 +38,18 @@
    "fieldtype": "Attach Image",
    "label": "reference_photo",
    "reqd": 1
+  },
+  {
+   "fieldname": "warehouse_location",
+   "fieldtype": "Geolocation",
+   "label": "Warehouse Location",
+   "options": "Warehouse"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-12 15:22:59.793984",
+ "modified": "2026-01-12 23:30:58.789878",
  "modified_by": "Administrator",
  "module": "Warehouse Attendance",
  "name": "Warehouse Staff",

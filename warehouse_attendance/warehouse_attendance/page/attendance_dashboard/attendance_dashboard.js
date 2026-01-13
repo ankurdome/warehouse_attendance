@@ -6,17 +6,10 @@ frappe.pages['attendance-dashboard'].on_page_load = function(wrapper) {
     });
 
     page.set_title('Warehouse Live Status');
-    
-    // Load the HTML template
     $(frappe.render_template('attendance_dashboard', {})).appendTo(page.main);
     
-    // Initial data fetch
     refresh_dashboard(page);
-
-    // Auto-refresh every 30 seconds
-    setInterval(() => {
-        refresh_dashboard(page);
-    }, 30000);
+    setInterval(() => { refresh_dashboard(page); }, 30000);
 };
 
 function refresh_dashboard(page) {
@@ -24,8 +17,8 @@ function refresh_dashboard(page) {
         method: "frappe.client.get_list",
         args: {
             doctype: "Warehouse Attendance Log",
-            // IMPORTANT: Added verification_status and face_distance to fields
-            fields: ["staff", "logtype", "selfie", "creation", "verification_status", "face_distance"],
+            // Ensure lowercase and no extra spaces here
+            fields: ["staff", "logtype", "selfie", "creation", "verification_status", "work_hours", "location", "is_near_warehouse"],
             order_by: "creation desc",
             limit: 100
         },
@@ -39,60 +32,61 @@ function refresh_dashboard(page) {
 
 function render_cards(logs) {
     const grid = $('#staff-grid');
-    const presentEl = $('#present-count');
-    const awayEl = $('#away-count');
-
-    if (!grid.length) return;
-    
     grid.empty();
+    
     let latest = {};
     let presentCount = 0;
     let awayCount = 0;
 
-    // 1. Group by staff to get the latest entry for each person
-    logs.forEach(l => { 
-        if(!latest[l.staff]) {
-            latest[l.staff] = l;
-        }
-    });
+    logs.forEach(l => { if(!latest[l.staff]) latest[l.staff] = l; });
 
-    // 2. Loop through the unique latest logs to build the UI
     Object.values(latest).forEach(log => {
-        // Increment global counters based on IN/OUT status
-        if (log.logtype === 'IN') {
-            presentCount++;
-        } else {
-            awayCount++;
+        if (log.logtype === 'IN') presentCount++; else awayCount++;
+
+        const v_status = log.verification_status || 'Pending';
+        const aiColor = v_status === 'Success' ? '#28a745' : (v_status === 'Failed' ? '#dc3545' : '#ffc107');
+        
+        // Format the system creation time
+        const timeDisplay = frappe.datetime.get_time(log.creation);
+        
+        // 1. Work Hours UI (Only shows for the most recent OUT log)
+        let workHoursHTML = '';
+        if (log.logtype === 'OUT' && log.work_hours) {
+            workHoursHTML = `
+                <div class="work-hours" style="color: #2b78ff; font-weight: bold; margin-top: 5px; font-size: 12px;">
+                    ⏱️ Shift: ${log.work_hours} hrs
+                </div>`;
         }
 
-        // Logic for Face Verification UI
-        const v_status = log.verification_status || 'Pending';
-        const is_failed = v_status === 'Failed';
-        
-        // Define visual styles based on verification result
-        const cardClass = is_failed ? 'staff-card failed-verify' : 'staff-card';
-        const badgeColor = is_failed ? '#dc3545' : (v_status === 'Success' ? '#28a745' : '#ffc107');
-        const dotClass = log.logtype === 'IN' ? 'is-in' : 'is-out';
+        // 2. Geofencing UI
+        const isNear = String(log.is_near_warehouse) === "1";
+        let locationHTML = (log.location && log.location.length > 10) 
+            ? `<span style="color: ${isNear ? '#28a745' : '#dc3545'}">${isNear ? '✅ On Site' : '🚨 Off Site'}</span>`
+            : `<span style="color: #999">📍 GPS Off</span>`;
 
-        // 3. Append the HTML to the grid
         grid.append(`
-            <div class="${cardClass}">
+            <div class="staff-card ${v_status === 'Failed' ? 'failed-verify' : ''}">
                 <img src="${log.selfie || '/assets/frappe/images/default-avatar.png'}" class="staff-photo">
                 <div class="staff-info">
-                    <b style="font-size: 1.1em;">${log.staff}</b><br>
-                    <small><span class="status-dot ${dotClass}"></span> ${log.logtype}</small>
-                    <div style="margin-top: 8px;">
-                        <span class="status-badge" style="background: ${badgeColor}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold;">
-                            ${v_status}
+                    <span class="staff-name">${log.staff}</span>
+                    <div style="font-size: 11px; color: #666;">
+                        <b>${log.logtype}</b> at ${timeDisplay}
+                    </div>
+                    
+                    ${workHoursHTML}
+
+                    <div class="badge-container" style="margin-top: 10px; font-size: 10px;">
+                        ${locationHTML}  
+                        <span class="status-badge" style="background: ${aiColor}; color: white; padding: 1px 4px; border-radius: 3px;">
+                            AI: ${v_status}
                         </span>
-                        ${log.face_distance ? `<br><small style="color: #999">Dist: ${log.face_distance.toFixed(2)}</small>` : ''}
+                         
                     </div>
                 </div>
             </div>
         `);
     });
 
-    // 4. Update the total counts at the top of the dashboard
-    presentEl.text(presentCount);
-    awayEl.text(awayCount);
+    $('#present-count').text(presentCount);
+    $('#away-count').text(awayCount);
 }

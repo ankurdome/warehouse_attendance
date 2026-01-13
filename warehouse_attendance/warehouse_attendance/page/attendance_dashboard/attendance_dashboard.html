@@ -2,9 +2,9 @@
     <div class="dashboard-header">
         <h1>Warehouse Live Status</h1>
         <div id="stats-strip">
-    <span class="indicator-pill green">Present: <b id="present-count">0</b></span>
-    <span class="indicator-pill red">Away: <b id="away-count">0</b></span>
-</div>
+            <span class="indicator-pill green">Present: <b id="present-count">0</b></span>
+            <span class="indicator-pill red">Away: <b id="away-count">0</b></span>
+        </div>
     </div>
     
     <div id="staff-grid" class="staff-grid">
@@ -12,18 +12,60 @@
 </div>
 
 <style>
-    .attendance-container { padding: 20px; background: #f8f9fa; }
+    .attendance-container { padding: 20px; background: #f8f9fa; min-height: 100vh; }
     .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-    .staff-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
-    .staff-photo { width: 100%; height: 180px; object-fit: cover; background: #eee; }
-    .staff-info { padding: 15px; }
-    .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+    
+    /* Layout */
+    .staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+    .staff-card { 
+        background: white; 
+        border-radius: 12px; 
+        overflow: hidden; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+        transition: transform 0.2s;
+        border: 1px solid #eee;
+    }
+    .staff-card:hover { transform: translateY(-5px); }
+    
+    /* Media */
+    .staff-photo { width: 100%; height: 200px; object-fit: cover; background: #f0f0f0; }
+    
+    /* Info Section */
+    .staff-info { padding: 15px; text-align: left; }
+    .staff-name { font-size: 1.1em; font-weight: bold; display: block; margin-bottom: 5px; color: #333; }
+    
+    /* Status Dots & Pills */
+    .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
     .is-in { background-color: #28a745; }
     .is-out { background-color: #dc3545; }
-    .indicator-pill { padding: 8px 15px; border-radius: 20px; margin-left: 10px; font-size: 14px; color: white; }
-    .green { background: #28a745; }
-    .red { background: #dc3545; }
-    .staff-card.failed-verify { border: 2px solid #dc3545; box-shadow: 0 0 10px rgba(220, 53, 69, 0.3); }
-    .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: bold; }
+    
+    .indicator-pill { padding: 8px 18px; border-radius: 20px; margin-left: 10px; font-size: 14px; color: white; font-weight: bold; }
+    .green { background: #28a745; box-shadow: 0 2px 5px rgba(40,167,69,0.2); }
+    .red { background: #dc3545; box-shadow: 0 2px 5px rgba(220,53,69,0.2); }
+
+    /* Verification & Location Badges */
+    .badge-container { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+    .status-badge { 
+        font-size: 10px; 
+        padding: 3px 8px; 
+        border-radius: 4px; 
+        text-transform: uppercase; 
+        font-weight: 800; 
+        display: inline-block;
+        width: fit-content;
+    }
+    
+    .location-text { font-size: 11px; font-weight: 600; display: flex; align-items: center; }
+    
+    /* Error States */
+    .staff-card.failed-verify { 
+        border: 2px solid #dc3545; 
+        animation: pulse-red 2s infinite; 
+    }
+
+    @keyframes pulse-red {
+        0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
 </style>
