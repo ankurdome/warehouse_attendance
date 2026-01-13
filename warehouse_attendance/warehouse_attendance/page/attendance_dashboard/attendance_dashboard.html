@@ -1,71 +1,137 @@
-<div class="attendance-container">
-    <div class="dashboard-header">
-        <h1>Warehouse Live Status</h1>
-        <div id="stats-strip">
-            <span class="indicator-pill green">Present: <b id="present-count">0</b></span>
-            <span class="indicator-pill red">Away: <b id="away-count">0</b></span>
-        </div>
+<div class="dashboard-wrapper">
+    <div class="dashboard-container">
+        
+        <header class="dashboard-header">
+            <div class="brand-info">
+                <h1>Warehouse Live Status</h1>
+                <p>Security & Attendance Oversight</p>
+            </div>
+            
+            <div class="metrics-row">
+                <div class="metric-card card-present">
+                    <div class="metric-icon">🟢</div>
+                    <div class="metric-data">
+                        <label>Present</label>
+                        <span id="present-count">0</span>
+                    </div>
+                </div>
+                <div class="metric-card card-away">
+                    <div class="metric-icon">🔴</div>
+                    <div class="metric-data">
+                        <label>Away</label>
+                        <span id="away-count">0</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="glass-filters">
+            <div class="filter-box search-box">
+                <label>Search Personnel</label>
+                <input type="text" id="filter-search" placeholder="Type name..." autocomplete="off">
+            </div>
+            <div class="filter-box divider">
+                <label>Log Type</label>
+                <select id="filter-logtype">
+                    <option value="">All Movements</option>
+                    <option value="IN">Entries (IN)</option>
+                    <option value="OUT">Exits (OUT)</option>
+                </select>
+            </div>
+            <div class="filter-box divider">
+                <label>AI Verification</label>
+                <select id="filter-verification">
+                    <option value="">All Status</option>
+                    <option value="Success">Verified</option>
+                    <option value="Failed">Flagged</option>
+                    <option value="Pending">Pending</option>
+                </select>
+            </div>
+            <div class="filter-box divider">
+                <label>Date</label>
+                <input type="date" id="filter-date">
+            </div>
+        </nav>
+
+        <main id="staff-grid" class="staff-grid"></main>
     </div>
-    
-    <div id="staff-grid" class="staff-grid">
-        </div>
 </div>
 
 <style>
-    .attendance-container { padding: 20px; background: #f8f9fa; min-height: 100vh; }
-    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    /* ... (Keeping your existing base styles) ... */
+    .dashboard-wrapper { background: #f4f7fa; min-height: 100vh; padding: 30px 20px; font-family: -apple-system, sans-serif; }
+    .dashboard-container { max-width: 1200px; margin: 0 auto; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+    .brand-info h1 { font-size: 28px; font-weight: 800; color: #1a1c23; margin: 0; }
+    .brand-info p { color: #8a92a6; margin: 5px 0 0; font-size: 14px; }
     
-    /* Layout */
-    .staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-    .staff-card { 
-        background: white; 
-        border-radius: 12px; 
-        overflow: hidden; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-        transition: transform 0.2s;
-        border: 1px solid #eee;
-    }
-    .staff-card:hover { transform: translateY(-5px); }
-    
-    /* Media */
-    .staff-photo { width: 100%; height: 200px; object-fit: cover; background: #f0f0f0; }
-    
-    /* Info Section */
-    .staff-info { padding: 15px; text-align: left; }
-    .staff-name { font-size: 1.1em; font-weight: bold; display: block; margin-bottom: 5px; color: #333; }
-    
-    /* Status Dots & Pills */
-    .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-    .is-in { background-color: #28a745; }
-    .is-out { background-color: #dc3545; }
-    
-    .indicator-pill { padding: 8px 18px; border-radius: 20px; margin-left: 10px; font-size: 14px; color: white; font-weight: bold; }
-    .green { background: #28a745; box-shadow: 0 2px 5px rgba(40,167,69,0.2); }
-    .red { background: #dc3545; box-shadow: 0 2px 5px rgba(220,53,69,0.2); }
+    .metrics-row { display: flex; gap: 15px; }
+    .metric-card { background: white; padding: 12px 25px; border-radius: 16px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+    .metric-data label { font-size: 10px; text-transform: uppercase; font-weight: 700; color: #8a92a6; display: block; }
+    .metric-data span { font-size: 24px; font-weight: 800; color: #1a1c23; }
 
-    /* Verification & Location Badges */
-    .badge-container { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
-    .status-badge { 
-        font-size: 10px; 
-        padding: 3px 8px; 
-        border-radius: 4px; 
-        text-transform: uppercase; 
-        font-weight: 800; 
-        display: inline-block;
-        width: fit-content;
+    .glass-filters { 
+        background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px);
+        padding: 10px 25px; border-radius: 20px; border: 1px solid white;
+        display: flex; gap: 0; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);
     }
+    .filter-box { flex: 1; padding: 10px 20px; }
+    .search-box { flex: 1.5; }
+    .divider { border-left: 1px solid #eee; }
+    .filter-box label { font-size: 11px; font-weight: 700; color: #6e768e; display: block; margin-bottom: 4px; }
+    .filter-box select, .filter-box input { width: 100%; border: none; background: transparent; font-size: 14px; font-weight: 600; outline: none; color: #1a1c23; }
     
-    .location-text { font-size: 11px; font-weight: 600; display: flex; align-items: center; }
+    .staff-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+    .staff-card { background: white; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: 0.3s; position: relative; }
+    .staff-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
     
-    /* Error States */
-    .staff-card.failed-verify { 
-        border: 2px solid #dc3545; 
-        animation: pulse-red 2s infinite; 
+    .photo-wrapper { position: relative; height: 260px; }
+    .staff-photo { width: 100%; height: 100%; object-fit: cover; }
+    .log-type-tag { position: absolute; top: 15px; left: 15px; padding: 4px 12px; border-radius: 30px; color: white; font-size: 10px; font-weight: 800; z-index: 2; }
+    .tag-in { background: #06d6a0; }
+    .tag-out { background: #ef476f; }
+
+    .staff-content { padding: 20px; background: #fff; }
+    .staff-name { font-size: 17px; font-weight: 700; color: #1a1c23; display: block; }
+    .staff-time { font-size: 13px; color: #8a92a6; margin-top: 4px; display: block; }
+
+    /* New Hours Badge Style */
+    .hours-badge {
+        background: #f0f4ff;
+        color: #4361ee;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
     }
 
-    @keyframes pulse-red {
-        0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    .card-footer {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #f4f7fa;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
+
+    .ai-label { font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 600; }
+    .status-green { background: #dcfce7; color: #15803d; }
+    .status-yellow { background: #fef9c3; color: #854d0e; }
+    .status-red { background: #fee2e2; color: #b91c1c; }
+
+    .location-btn {
+        font-size: 11px;
+        font-weight: 700;
+        color: #4361ee;
+        text-decoration: none;
+        background: #f1f5f9;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: 0.2s;
+    }
+    .location-btn:hover { background: #4361ee; color: white; }
+    .flagged { border: 2px solid #ef476f !important; }
 </style>

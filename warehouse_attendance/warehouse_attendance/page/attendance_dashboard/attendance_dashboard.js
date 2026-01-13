@@ -1,92 +1,152 @@
 frappe.pages['attendance-dashboard'].on_page_load = function(wrapper) {
     let page = frappe.ui.make_app_page({
         parent: wrapper,
-        title: 'Attendance Dashboard',
+        title: 'Warehouse Live Status',
         single_column: true
     });
 
-    page.set_title('Warehouse Live Status');
-    $(frappe.render_template('attendance_dashboard', {})).appendTo(page.main);
-    
-    refresh_dashboard(page);
-    setInterval(() => { refresh_dashboard(page); }, 30000);
+    $(wrapper).find('.layout-main-section').empty().append(frappe.render_template("attendance_dashboard", {}));
+
+    // Setup Event Listeners
+    $(wrapper).on('change', '#filter-logtype, #filter-verification, #filter-date', () => refresh_dashboard(wrapper));
+    $(wrapper).on('keyup', '#filter-search', () => refresh_dashboard(wrapper));
+
+    // Initial load and auto-refresh
+    refresh_dashboard(wrapper);
+    setInterval(() => refresh_dashboard(wrapper), 60000);
 };
 
-function refresh_dashboard(page) {
+function refresh_dashboard(wrapper) {
+    let filters = [];
+    let search = $(wrapper).find('#filter-search').val();
+    let logtype = $(wrapper).find('#filter-logtype').val();
+    let verification = $(wrapper).find('#filter-verification').val();
+    let date = $(wrapper).find('#filter-date').val() || frappe.datetime.get_today();
+
+    if (search) filters.push(["employee_name", "like", `%${search}%`]);
+    if (logtype) filters.push(["logtype", "=", logtype]);
+    if (verification) filters.push(["verification_status", "=", verification]);
+    
+    // Date filter
+    filters.push(["creation", "between", [date + " 00:00:00", date + " 23:59:59"]]);
+
+    // Step 1: Get Daily Working Hours
     frappe.call({
         method: "frappe.client.get_list",
         args: {
-            doctype: "Warehouse Attendance Log",
-            // Ensure lowercase and no extra spaces here
-            fields: ["staff", "logtype", "selfie", "creation", "verification_status", "work_hours", "location", "is_near_warehouse"],
-            order_by: "creation desc",
-            limit: 100
+            doctype: "Staff Daily Working Hours",
+            filters: {"date": date},
+            fields: ["employee", "working_hours"]
         },
-        callback: function(r) {
-            if (r.message) {
-                render_cards(r.message);
+        callback: function(h) {
+            let hours_map = {};
+            if (h.message) {
+                h.message.forEach(row => { hours_map[row.employee] = row.working_hours; });
             }
+
+            // Step 2: Get Attendance Logs
+            frappe.call({
+                method: "frappe.client.get_list",
+                args: {
+                    doctype: "Warehouse Attendance Log",
+                    filters: filters,
+                    fields: ["name", "staff", "employee_name", "logtype", "selfie", "creation", "verification_status", "work_hours", "location"],
+                    order_by: "creation desc",
+                    limit: 40
+                },
+                callback: function(r) {
+                    if (r.message) {
+                        render_staff_cards(wrapper, r.message, hours_map);
+                        update_stats(wrapper, r.message); // This will now work
+                    }
+                }
+            });
         }
     });
 }
 
-function render_cards(logs) {
-    const grid = $('#staff-grid');
-    grid.empty();
+function render_staff_cards(wrapper, logs, hours_map) {
+    let $grid = $(wrapper).find('#staff-grid').empty();
     
-    let latest = {};
-    let presentCount = 0;
-    let awayCount = 0;
+    if (!logs || logs.length === 0) {
+        $grid.append('<div class="no-data">No activity found for this period.</div>');
+        return;
+    }
 
-    logs.forEach(l => { if(!latest[l.staff]) latest[l.staff] = l; });
+    logs.forEach(log => {
+        let status_class = "";
+        let status_text = log.verification_status || "Pending";
 
-    Object.values(latest).forEach(log => {
-        if (log.logtype === 'IN') presentCount++; else awayCount++;
-
-        const v_status = log.verification_status || 'Pending';
-        const aiColor = v_status === 'Success' ? '#28a745' : (v_status === 'Failed' ? '#dc3545' : '#ffc107');
+        if (status_text === 'Success') status_class = "status-green";
+        else if (status_text === 'Pending') status_class = "status-yellow";
+        else if (status_text === 'Failed') status_class = "status-red";
         
-        // Format the system creation time
-        const timeDisplay = frappe.datetime.get_time(log.creation);
+        let log_class = log.logtype === 'IN' ? 'tag-in' : 'tag-out';
+        let total_hrs = hours_map[log.staff] || 0;
         
-        // 1. Work Hours UI (Only shows for the most recent OUT log)
-        let workHoursHTML = '';
-        if (log.logtype === 'OUT' && log.work_hours) {
-            workHoursHTML = `
-                <div class="work-hours" style="color: #2b78ff; font-weight: bold; margin-top: 5px; font-size: 12px;">
-                    ⏱️ Shift: ${log.work_hours} hrs
-                </div>`;
+        let location_btn = "";
+        if (log.location) {
+            try {
+                const loc = typeof log.location === 'string' ? JSON.parse(log.location) : log.location;
+                const coords = loc.features[0].geometry.coordinates;
+                const map_url = `https://www.google.com/maps?q=${coords[1]},${coords[0]}`;
+                location_btn = `<a href="${map_url}" target="_blank" class="location-btn">📍 Map</a>`;
+            } catch (e) { console.log("Map error"); }
         }
 
-        // 2. Geofencing UI
-        const isNear = String(log.is_near_warehouse) === "1";
-        let locationHTML = (log.location && log.location.length > 10) 
-            ? `<span style="color: ${isNear ? '#28a745' : '#dc3545'}">${isNear ? '✅ On Site' : '🚨 Off Site'}</span>`
-            : `<span style="color: #999">📍 GPS Off</span>`;
-
-        grid.append(`
-            <div class="staff-card ${v_status === 'Failed' ? 'failed-verify' : ''}">
-                <img src="${log.selfie || '/assets/frappe/images/default-avatar.png'}" class="staff-photo">
-                <div class="staff-info">
-                    <span class="staff-name">${log.staff}</span>
-                    <div style="font-size: 11px; color: #666;">
-                        <b>${log.logtype}</b> at ${timeDisplay}
+        $grid.append(`
+            <div class="staff-card ${status_text === 'Failed' ? 'flagged' : ''}">
+                <div class="photo-wrapper">
+                    <img src="${log.selfie || '/assets/frappe/images/default-avatar.png'}" class="staff-photo">
+                    <span class="log-type-tag ${log_class}">${log.logtype}</span>
+                </div>
+                <div class="staff-content">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span class="staff-name">${log.employee_name || log.staff}</span>
+                            <span class="staff-time">${frappe.datetime.get_time(log.creation)}</span>
+                        </div>
+                        <div class="hours-badge">
+                             ⏱️ ${total_hrs.toFixed(2)}h
+                        </div>
                     </div>
                     
-                    ${workHoursHTML}
-
-                    <div class="badge-container" style="margin-top: 10px; font-size: 10px;">
-                        ${locationHTML}  
-                        <span class="status-badge" style="background: ${aiColor}; color: white; padding: 1px 4px; border-radius: 3px;">
-                            AI: ${v_status}
+                    <div class="card-footer">
+                        <span class="ai-label ${status_class}">
+                            ${status_text}
                         </span>
-                         
+                        ${location_btn}
                     </div>
                 </div>
             </div>
         `);
     });
-
-    $('#present-count').text(presentCount);
-    $('#away-count').text(awayCount);
 }
+
+// THE MISSING FUNCTION
+function update_stats(wrapper, logs) {
+    // We count based on the latest movement of each staff member in the current view
+    const unique_staff = {};
+    logs.forEach(log => {
+        if (!unique_staff[log.staff]) {
+            unique_staff[log.staff] = log.logtype;
+        }
+    });
+
+    const values = Object.values(unique_staff);
+    const present = values.filter(v => v === 'IN').length;
+    const away = values.filter(v => v === 'OUT').length;
+
+    $(wrapper).find('#present-count').text(present);
+    $(wrapper).find('#away-count').text(away);
+}
+
+function format_hours(decimal_hours) {
+    if (!decimal_hours) return "0h 0m";
+    let hours = Math.floor(decimal_hours);
+    let minutes = Math.round((decimal_hours - hours) * 60);
+    return `${hours}h ${minutes}m`;
+}
+
+// Use it like this in your card template:
+// <span>Total Time: <b>${format_hours(log.working_hours)}</b></span>

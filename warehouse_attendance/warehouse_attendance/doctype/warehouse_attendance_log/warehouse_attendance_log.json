@@ -7,9 +7,7 @@
  "field_order": [
   "staff",
   "employee_name",
-  "timestamp",
   "logtype",
-  "deviceid",
   "location",
   "selfie",
   "verification_status",
@@ -34,19 +32,9 @@
    "options": "IN\nOUT"
   },
   {
-   "fieldname": "deviceid",
-   "fieldtype": "Data",
-   "label": "Deviceid"
-  },
-  {
    "fieldname": "location",
    "fieldtype": "Geolocation",
-   "label": "Location"
-  },
-  {
-   "fieldname": "timestamp",
-   "fieldtype": "Datetime",
-   "label": "Time"
+   "label": "location"
   },
   {
    "fieldname": "selfie",
@@ -58,7 +46,7 @@
    "fieldname": "verification_status",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "verification_status",
+   "label": "Verification",
    "options": "Pending\nSuccess\nFailed"
   },
   {
@@ -77,7 +65,7 @@
    "fieldname": "work_hours",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "work_hours"
+   "label": "Work Hours"
   },
   {
    "fetch_from": "staff.staffname",
@@ -91,7 +79,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-13 12:33:13.726822",
+ "modified": "2026-01-13 14:44:13.077182",
  "modified_by": "Administrator",
  "module": "Warehouse Attendance",
  "name": "Warehouse Attendance Log",
@@ -112,7 +100,7 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
- "search_fields": "staff,employee_name, logtype, verification_status, work_hours",
+ "search_fields": "staff,employee_name, logtype, verification_status, work_hours, location",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
