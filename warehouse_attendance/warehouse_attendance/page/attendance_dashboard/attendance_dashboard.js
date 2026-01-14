@@ -5,6 +5,11 @@ frappe.pages['attendance-dashboard'].on_page_load = function(wrapper) {
         single_column: true
     });
 
+    // --- FIX: Button must be inside on_page_load ---
+    page.add_inner_button('View Detailed Analytics', function() {
+        frappe.set_route('staff-analytics');
+    });
+
     $(wrapper).find('.layout-main-section').empty().append(frappe.render_template("attendance_dashboard", {}));
 
     // Setup Event Listeners
@@ -27,10 +32,8 @@ function refresh_dashboard(wrapper) {
     if (logtype) filters.push(["logtype", "=", logtype]);
     if (verification) filters.push(["verification_status", "=", verification]);
     
-    // Date filter
     filters.push(["creation", "between", [date + " 00:00:00", date + " 23:59:59"]]);
 
-    // Step 1: Get Daily Working Hours
     frappe.call({
         method: "frappe.client.get_list",
         args: {
@@ -44,7 +47,6 @@ function refresh_dashboard(wrapper) {
                 h.message.forEach(row => { hours_map[row.employee] = row.working_hours; });
             }
 
-            // Step 2: Get Attendance Logs
             frappe.call({
                 method: "frappe.client.get_list",
                 args: {
@@ -57,7 +59,7 @@ function refresh_dashboard(wrapper) {
                 callback: function(r) {
                     if (r.message) {
                         render_staff_cards(wrapper, r.message, hours_map);
-                        update_stats(wrapper, r.message); // This will now work
+                        update_stats(wrapper, r.message);
                     }
                 }
             });
@@ -82,7 +84,10 @@ function render_staff_cards(wrapper, logs, hours_map) {
         else if (status_text === 'Failed') status_class = "status-red";
         
         let log_class = log.logtype === 'IN' ? 'tag-in' : 'tag-out';
-        let total_hrs = hours_map[log.staff] || 0;
+        
+        // Use the format_hours function for the badge
+        let total_hrs_raw = hours_map[log.staff] || 0;
+        let formatted_time = format_hours(total_hrs_raw);
         
         let location_btn = "";
         if (log.location) {
@@ -107,7 +112,7 @@ function render_staff_cards(wrapper, logs, hours_map) {
                             <span class="staff-time">${frappe.datetime.get_time(log.creation)}</span>
                         </div>
                         <div class="hours-badge">
-                             ⏱️ ${total_hrs.toFixed(2)}h
+                             ⏱️ ${formatted_time}
                         </div>
                     </div>
                     
@@ -123,9 +128,7 @@ function render_staff_cards(wrapper, logs, hours_map) {
     });
 }
 
-// THE MISSING FUNCTION
 function update_stats(wrapper, logs) {
-    // We count based on the latest movement of each staff member in the current view
     const unique_staff = {};
     logs.forEach(log => {
         if (!unique_staff[log.staff]) {
@@ -141,12 +144,10 @@ function update_stats(wrapper, logs) {
     $(wrapper).find('#away-count').text(away);
 }
 
+// FORMATTER: Converts decimal 5.12 to "5h 7m"
 function format_hours(decimal_hours) {
-    if (!decimal_hours) return "0h 0m";
+    if (!decimal_hours || decimal_hours <= 0) return "0h 0m";
     let hours = Math.floor(decimal_hours);
     let minutes = Math.round((decimal_hours - hours) * 60);
     return `${hours}h ${minutes}m`;
 }
-
-// Use it like this in your card template:
-// <span>Total Time: <b>${format_hours(log.working_hours)}</b></span>

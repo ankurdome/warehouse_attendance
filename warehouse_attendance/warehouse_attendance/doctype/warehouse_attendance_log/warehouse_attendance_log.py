@@ -49,20 +49,18 @@ class WarehouseAttendanceLog(Document):
                 self.work_hours = round(diff, 2)
 
     def after_insert(self):
-            # 1. Update Staff status in the main Staff DocType
-            status_map = {"IN": "Active", "OUT": "Inactive"}
-            if self.logtype in status_map:
-                frappe.db.set_value("Warehouse Staff", self.staff, "current_status", status_map[self.logtype])
+        # Update Staff status
+        status_map = {"IN": "Active", "OUT": "Inactive"}
+        if self.logtype in status_map:
+            frappe.db.set_value("Warehouse Staff", self.staff, "current_status", status_map[self.logtype])
 
-            # 2. BUG FIX: Only sync hours if verification was successful
-            # This prevents fraudulent logs from counting toward total hours
-            if self.logtype == "OUT" and self.work_hours:
-                if self.verification_status == "Success":
-                    self.sync_to_daily_working_hours(self.work_hours)
-                else:
-                    # Optional: Log why it wasn't synced
-                    frappe.msgprint(f"Attendance Log {self.name} created, but hours not synced due to {self.verification_status} verification.")
-
+        # ONLY sync if Log is OUT AND Verification is Success
+        if self.logtype == "OUT" and self.work_hours > 0:
+            if self.verification_status == "Success":
+                self.sync_to_daily_working_hours(self.work_hours)
+            else:
+                # If it failed, we don't sync hours, keeping the chart accurate
+                frappe.msgprint("Face Verification Failed. Hours were not added to daily total.")
 
     def sync_to_daily_working_hours(self, hours):
         current_date = today()
